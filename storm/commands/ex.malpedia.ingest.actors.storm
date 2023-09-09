@@ -1,0 +1,11 @@
+init {
+    $api = $lib.import(ex.malpedia.api, debug=$lib.debug)
+    $privsep = $lib.import(ex.malpedia.privsep, debug=$lib.debug)
+}
+
+$data = $lib.false
+$data = $api.fetchActorProfiles($cmdopts.asof)
+
+if ($data) {
+    divert $cmdopts.yield $privsep.parseActorProfiles($data, $cmdopts."no-refs")
+}

@@ -1,0 +1,199 @@
+function getMetaSource() {
+    [ meta:source=$lib.guid("malpedia", "ex", "powerup") :name="malpedia" ]
+    return($node)
+}
+
+function getMalpediaAPIKey() {
+    // see if the user has their own key set
+    $apikey = $lib.user.vars.get("malpedia:apikey")
+    if ($apikey) {
+        return($apikey)
+    }
+
+    // no user key, check for global
+    $apikey = $lib.globals.get("malpedia:apikey")
+    if ($apikey) {
+        return($apikey)
+    }
+ 
+    return("none")
+}
+
+function setMalpediaAPIKey(key, self) {
+    if ($self) {
+        $lib.user.vars.set("malpedia:apikey", $key)
+    } else {
+        $lib.globals.set("malpedia:apikey", $key)
+    }
+    return($checkMalpediaAPIKey())
+}
+
+function checkMalpediaAPIKey() {
+    $resp = $makeMalpediaAPIRequest("check/apikey", "now")
+    
+    if ($resp.code = 200) {
+        return($lib.true)
+    } else {
+        return($lib.false)
+    }
+}
+
+function getTagPrefix() {
+    return($lib.globals.get("ex.malpedia:tag-prefix", default=rep.malpedia))
+}
+
+function setTagPrefix(prefix) {
+    ($ok, $norm) = $lib.trycast(syn:tag:part, $prefix)
+    if (not $ok) {
+        $lib.warn("failed to set tag prefix, invalid value: {s}", s=$prefix)
+        return($lib.null)
+    }
+
+    $lib.globals.set("ex.malpedia:tag-prefix", $prefix)
+}
+
+function makeMalpediaAPIRequest(api_endpoint, asof) {
+
+    $cachedData = $lib.jsonstor.cacheget("ex.malpedia", $api_endpoint, $asof)
+    if ($cachedData) {
+        if $lib.debug { $lib.print("Using cached data for API endpoint response: {s}", s=$api_endpoint) }
+        return($cachedData)
+    }
+
+    $url = `https://malpedia.caad.fkie.fraunhofer.de/api/{$api_endpoint}`
+    $headers = $lib.dict("Authorization"=$getMalpediaAPIKey())
+
+    $resp = $lib.inet.http.get($url, $headers)
+    if ($resp.code != 200) { return($lib.false) }
+
+    $json = $resp.body.json()
+    $ret = $lib.jsonstor.cacheset("ex.malpedia", $api_endpoint, $json)
+    if $lib.debug { 
+        $lib.print("Wrote http API response cache data for {s}: {r}", s=$api_endpoint, r=$ret) 
+    }
+
+    return($json)
+}
+
+function parseMalwareProfiles(data, norefs) {
+
+    $srcnode = $getMetaSource()
+
+    for $family in $data {
+        [risk:tool:software=("malpedia", $family.1.uuid)
+            :reporter:name="Malpedia"
+            :tag=`{$getTagPrefix()}.mal.{$family.0}`
+            :soft:name=$family.0
+        ]
+        if ($family.1.description != $lib.null) {[:desc=$family.1.description]}
+
+
+        if ($lib.len($family.1.alt_names) > 0) {
+            $alt_names = $family.1.alt_names
+            if ($family.1.common_name != $lib.null) { $alt_names.append($family.1.common_name) }
+            [:soft:names=$alt_names]
+        } elif ($family.1.common_name != $lib.null) {
+            [:soft:names=($family.1.common_name,)]
+        }
+    
+        tee
+        {
+            if (not $norefs) {
+                for $ref in $actor_data.meta.refs {
+                    [<(refs)+ {[media:news=$lib.gen.newsByUrl($ref)] [<(seen)+ { yield $srcnode }]}]
+                }
+            }
+        }
+        {
+            [<(seen)+ { yield $srcnode }]
+        }
+    }
+}
+
+function parseActorProfiles(data, norefs) {
+
+    $srcnode = $getMetaSource()
+
+    for $actor in $data {
+        $url = `https://malpedia.caad.fkie.fraunhofer.de/api/get/actor/{$actor}`
+        $headers = $lib.dict("Authorization"=$getMalpediaAPIKey())
+        $resp = $lib.inet.http.get($url, $headers)
+
+        if ($resp.code = 200) {
+            $actor_data = $resp.body.json()
+            
+            [risk:threat=("malpedia", $actor_data.uuid)
+                :org:name=$actor
+            ]
+
+            if ($actor_data.description != $lib.null) {[:desc=$actor_data.description]}
+
+            if ($actor_data.meta."cfr-type-of-incident" != $lib.null) {[:type=`malpedia.{$actor_data.meta."cfr-type-of-incident"}`]}
+            if ($actor_data.meta.country != $lib.null) {[:org:loc=$actor_data.meta.country]}
+
+            if ($actor_data.meta.synonyms != $lib.null and $lib.len($actor_data.meta.synonyms) > 0) {
+                [:org:names=$actor_data.meta.synonyms]   
+            }
+
+
+            tee {
+                if ($actor_data.meta."cfr-target-category" != $lib.null) {
+                    for $target_industry in $actor_data.meta."cfr-target-category" {
+                        [+(targets)> {[ou:industry=$lib.gen.industryByName($target_industry)]}]
+                    }
+                }
+            }
+            {
+                for $family in $actor_data.families {
+                    [<(uses)+ {[risk:tool:software=("malpedia", $family.1.uuid)] [<(seen)+ { yield $srcnode }]}]
+                }
+            }
+
+            {
+                if (not $norefs) {
+                    for $ref in $actor_data.meta.refs {
+                        [<(refs)+ {[media:news=$lib.gen.newsByUrl($ref)] [<(seen)+ { yield $srcnode }]}]
+                    }
+                }
+            }
+
+            {
+                [<(seen)+ { yield $srcnode }]
+            }
+            
+            //This field seems to be broken: while it links to UUIDs, there are no matching actor profiles for said UUIDs. 
+            /*
+            {
+                if ($actor_data.related != $lib.null) {
+                    for $related in $actor_data.related {
+                        [+(similar_to)> {[risk:threat=("malpedia", $related."dest-uuid")]}]
+                    }
+                }
+            }*/
+    
+        } else {
+            $lib.warn($resp)
+        }
+
+    }
+} 
+
+function parseIndicators(data) {
+
+    $srcnode = $getMetaSource()
+
+    for $family in $data {
+        for $sample in $family.1 {
+            [hash:sha256=$sample.sha256]
+            $mal_tag = `{$getTagPrefix()}.mal.{$family.0}`
+            [+#$mal_tag]
+    
+            if ($sample.status != $lib.null) {
+                $status_tag = `{$getTagPrefix()}.status.{$sample.status}`
+                [+#$status_tag]
+            }
+
+            [<(seen)+ { yield $srcnode }]
+        }
+    }
+}

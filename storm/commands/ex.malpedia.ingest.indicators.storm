@@ -1,0 +1,18 @@
+init {
+    $api = $lib.import(ex.malpedia.api, debug=$lib.debug)
+    $privsep = $lib.import(ex.malpedia.privsep, debug=$lib.debug)
+}
+
+$api_key_set = $privsep.checkMalpediaAPIKey()
+
+if ($api_key_set) {
+    $data = $lib.false
+    $data = $api.fetchIndicators($cmdopts.asof)
+
+    if ($data) {
+        divert $cmdopts.yield $privsep.parseIndicators($data, $cmdopts."no-refs")
+    }
+
+} else {
+    $lib.exit("Malpedia API key not set and is needed to use this function, please run 'ex.malpedia.setup.apikey' first")
+}

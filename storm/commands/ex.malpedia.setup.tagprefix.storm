@@ -1,0 +1,6 @@
+init {
+    $privsep = $lib.import(ex.malpedia.privsep)
+
+    $privsep.setTagPrefix($cmdopts.tagname)
+    $lib.print("Changed the Malpedia tag prefix to #{p}", p=$privsep.getTagPrefix())
+}

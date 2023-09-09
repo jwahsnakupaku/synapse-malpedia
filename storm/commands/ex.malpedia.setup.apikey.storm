@@ -1,0 +1,18 @@
+init {
+    $privsep = $lib.import(ex.malpedia.privsep, debug=$lib.debug)
+
+    if ($cmdopts.self) {
+        $lib.print("Setting Malpedia API key for the current user.")
+    } else {
+        $lib.print("Setting Malpedia API key for all users.")
+    }
+
+    $key_status_ok = $privsep.setMalpediaAPIKey($cmdopts.apikey, $cmdopts.self)
+
+    if ($key_status_ok) {
+        if ($lib.debug) {$lib.print("Malpedia API key set successfully")}
+    } else {
+        $lib.print("Failed setting the key for the Malpedia API")
+    }
+
+}

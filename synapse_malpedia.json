@@ -1,0 +1,265 @@
+{
+  "author": {
+    "name": "EXC3L",
+    "url": "https://github.com/EXC3L-ONE"
+  },
+  "build": {
+    "time": 1694265796273
+  },
+  "commands": [
+    {
+      "cmdargs": [
+        [
+          "apikey",
+          {
+            "help": "The API Key",
+            "type": "str"
+          }
+        ],
+        [
+          "--self",
+          {
+            "action": "store_true",
+            "default": false,
+            "help": "Set the key as a user variable. If not used, the key is set globally.",
+            "type": "bool"
+          }
+        ],
+        [
+          "--debug",
+          {
+            "action": "store_true",
+            "default": false,
+            "help": "Show verbose debug output.",
+            "type": "bool"
+          }
+        ]
+      ],
+      "descr": "Set the API key to use with Malpedia (optional, except for `ex.malpedia.ingest.indicators`)",
+      "name": "ex.malpedia.setup.apikey",
+      "perms": [
+        [
+          "ex",
+          "malpedia",
+          "user"
+        ]
+      ],
+      "storm": "init {\n    $privsep = $lib.import(ex.malpedia.privsep, debug=$lib.debug)\n\n    if ($cmdopts.self) {\n        $lib.print(\"Setting Malpedia API key for the current user.\")\n    } else {\n        $lib.print(\"Setting Malpedia API key for all users.\")\n    }\n\n    $key_status_ok = $privsep.setMalpediaAPIKey($cmdopts.apikey, $cmdopts.self)\n\n    if ($key_status_ok) {\n        if ($lib.debug) {$lib.print(\"Malpedia API key set successfully\")}\n    } else {\n        $lib.print(\"Failed setting the key for the Malpedia API\")\n    }\n\n}"
+    },
+    {
+      "cmdargs": [
+        [
+          "tagname",
+          {
+            "default": "rep.malpedia",
+            "help": "The tag prefix to use.",
+            "type": "str"
+          }
+        ]
+      ],
+      "descr": "Set the tag prefix used when recording Malpedia tags. Defaults to `rep.malpedia`.",
+      "name": "ex.malpedia.setup.tagprefix",
+      "perms": [
+        [
+          "ex",
+          "malpedia",
+          "user"
+        ]
+      ],
+      "storm": "init {\n    $privsep = $lib.import(ex.malpedia.privsep)\n\n    $privsep.setTagPrefix($cmdopts.tagname)\n    $lib.print(\"Changed the Malpedia tag prefix to #{p}\", p=$privsep.getTagPrefix())\n}"
+    },
+    {
+      "cmdargs": [
+        [
+          "--yield",
+          {
+            "action": "store_true",
+            "default": false,
+            "help": "Yield the newly created nodes rather than the input inet:url nodes.",
+            "type": "bool"
+          }
+        ],
+        [
+          "--asof",
+          {
+            "default": "-30days",
+            "help": "Specify the maximum age for a cached result. To disable caching, use --asof now.",
+            "type": "str"
+          }
+        ],
+        [
+          "--debug",
+          {
+            "action": "store_true",
+            "default": false,
+            "help": "Show verbose debug output.",
+            "type": "bool"
+          }
+        ],
+        [
+          "--no-refs",
+          {
+            "action": "store_true",
+            "default": false,
+            "help": "Do not ingest the references for ingested profiles (i.e. do not create media:news nodes)",
+            "type": "bool"
+          }
+        ]
+      ],
+      "descr": "Ingest all threat actor profiles from the Malpedia API.  Warning - it is not recommended to run this command without also running the ex.malpedia.ingest.malware command as it may create empty risk:tool:software nodes.",
+      "forms": {
+        "output": [
+          "media:news",
+          "risk:threat"
+        ]
+      },
+      "name": "ex.malpedia.ingest.actors",
+      "perms": [
+        [
+          "ex",
+          "malpedia",
+          "user"
+        ]
+      ],
+      "storm": "init {\n    $api = $lib.import(ex.malpedia.api, debug=$lib.debug)\n    $privsep = $lib.import(ex.malpedia.privsep, debug=$lib.debug)\n}\n\n$data = $lib.false\n$data = $api.fetchActorProfiles($cmdopts.asof)\n\nif ($data) {\n    divert $cmdopts.yield $privsep.parseActorProfiles($data, $cmdopts.\"no-refs\")\n}"
+    },
+    {
+      "cmdargs": [
+        [
+          "--yield",
+          {
+            "action": "store_true",
+            "default": false,
+            "help": "Yield the newly created nodes.",
+            "type": "bool"
+          }
+        ],
+        [
+          "--asof",
+          {
+            "default": "-24hours",
+            "help": "Specify the maximum age for a cached result. To disable caching, use --asof now. Defaults to -24hours.",
+            "type": "str"
+          }
+        ],
+        [
+          "--debug",
+          {
+            "action": "store_true",
+            "default": false,
+            "help": "Show verbose debug output.",
+            "type": "bool"
+          }
+        ],
+        [
+          "--no-refs",
+          {
+            "action": "store_true",
+            "default": false,
+            "help": "Do not ingest the references for ingested profiles (i.e. do not create media:news nodes)",
+            "type": "bool"
+          }
+        ]
+      ],
+      "descr": "Ingest all malware profiles from the Malpedia API.",
+      "forms": {
+        "output": [
+          "media:news",
+          "risk:tool:software"
+        ]
+      },
+      "name": "ex.malpedia.ingest.malware",
+      "perms": [
+        [
+          "ex",
+          "malpedia",
+          "user"
+        ]
+      ],
+      "storm": "init {\n    $api = $lib.import(ex.malpedia.api, debug=$lib.debug)\n    $privsep = $lib.import(ex.malpedia.privsep, debug=$lib.debug)\n}\n\n$data = $lib.false\n$data = $api.fetchMalwareProfiles($cmdopts.asof)\n\nif ($data) {\n    divert $cmdopts.yield $privsep.parseMalwareProfiles($data, $cmdopts.\"no-refs\")\n}"
+    },
+    {
+      "cmdargs": [
+        [
+          "--yield",
+          {
+            "action": "store_true",
+            "default": false,
+            "help": "Yield the newly created nodes.",
+            "type": "bool"
+          }
+        ],
+        [
+          "--asof",
+          {
+            "default": "-24hours",
+            "help": "Specify the maximum age for a cached result. To disable caching, use --asof now.  Defaults to -24hours.",
+            "type": "str"
+          }
+        ],
+        [
+          "--debug",
+          {
+            "action": "store_true",
+            "default": false,
+            "help": "Show verbose debug output.",
+            "type": "bool"
+          }
+        ]
+      ],
+      "descr": "Ingests all IOCs from Malpedia.",
+      "forms": {
+        "output": [
+          "media:news",
+          "hash:sha256"
+        ]
+      },
+      "name": "ex.malpedia.ingest.indicators",
+      "perms": [
+        [
+          "ex",
+          "malpedia",
+          "user"
+        ]
+      ],
+      "storm": "init {\n    $api = $lib.import(ex.malpedia.api, debug=$lib.debug)\n    $privsep = $lib.import(ex.malpedia.privsep, debug=$lib.debug)\n}\n\n$api_key_set = $privsep.checkMalpediaAPIKey()\n\nif ($api_key_set) {\n    $data = $lib.false\n    $data = $api.fetchIndicators($cmdopts.asof)\n\n    if ($data) {\n        divert $cmdopts.yield $privsep.parseIndicators($data, $cmdopts.\"no-refs\")\n    }\n\n} else {\n    $lib.exit(\"Malpedia API key not set and is needed to use this function, please run 'ex.malpedia.setup.apikey' first\")\n}"
+    }
+  ],
+  "desc": "The ex-malpedia package provides simple ingest functionality for the Malpedia service. It can ingest all malware families and threat actor profiles as well as their references and related indicators.",
+  "modules": [
+    {
+      "name": "ex.malpedia.api",
+      "storm": "$privsep = $lib.import(ex.malpedia.privsep, debug=$lib.debug)\n\n// Fetch all malware profiles from Malpedia\nfunction fetchMalwareProfiles(asof) {\n    $api_url = \"get/families\"\n    return($privsep.makeMalpediaAPIRequest($api_endpoint, $asof))\n}\n\n// Fetch all actor profiles from Malpedia\nfunction fetchActorProfiles(asof) {\n    $api_endpoint = \"list/actors\"\n    return($privsep.makeMalpediaAPIRequest($api_endpoint, $asof))\n}\n\n// Fetch all indicators from Malpedia\nfunction fetchIndicators(asof) {\n    $api_endpoint = \"get/indicators\"\n    return($privsep.makeMalpediaAPIRequest($api_endpoint, $asof))\n}"
+    },
+    {
+      "asroot:perms": [
+        [
+          "ex",
+          "malpedia",
+          "user"
+        ]
+      ],
+      "name": "ex.malpedia.privsep",
+      "storm": "function getMetaSource() {\n    [ meta:source=$lib.guid(\"malpedia\", \"ex\", \"powerup\") :name=\"malpedia\" ]\n    return($node)\n}\n\nfunction getMalpediaAPIKey() {\n    // see if the user has their own key set\n    $apikey = $lib.user.vars.get(\"malpedia:apikey\")\n    if ($apikey) {\n        return($apikey)\n    }\n\n    // no user key, check for global\n    $apikey = $lib.globals.get(\"malpedia:apikey\")\n    if ($apikey) {\n        return($apikey)\n    }\n \n    return(\"none\")\n}\n\nfunction setMalpediaAPIKey(key, self) {\n    if ($self) {\n        $lib.user.vars.set(\"malpedia:apikey\", $key)\n    } else {\n        $lib.globals.set(\"malpedia:apikey\", $key)\n    }\n    return($checkMalpediaAPIKey())\n}\n\nfunction checkMalpediaAPIKey() {\n    $resp = $makeMalpediaAPIRequest(\"check/apikey\", \"now\")\n    \n    if ($resp.code = 200) {\n        return($lib.true)\n    } else {\n        return($lib.false)\n    }\n}\n\nfunction getTagPrefix() {\n    return($lib.globals.get(\"ex.malpedia:tag-prefix\", default=rep.malpedia))\n}\n\nfunction setTagPrefix(prefix) {\n    ($ok, $norm) = $lib.trycast(syn:tag:part, $prefix)\n    if (not $ok) {\n        $lib.warn(\"failed to set tag prefix, invalid value: {s}\", s=$prefix)\n        return($lib.null)\n    }\n\n    $lib.globals.set(\"ex.malpedia:tag-prefix\", $prefix)\n}\n\nfunction makeMalpediaAPIRequest(api_endpoint, asof) {\n\n    $cachedData = $lib.jsonstor.cacheget(\"ex.malpedia\", $api_endpoint, $asof)\n    if ($cachedData) {\n        if $lib.debug { $lib.print(\"Using cached data for API endpoint response: {s}\", s=$api_endpoint) }\n        return($cachedData)\n    }\n\n    $url = `https://malpedia.caad.fkie.fraunhofer.de/api/{$api_endpoint}`\n    $headers = $lib.dict(\"Authorization\"=$getMalpediaAPIKey())\n\n    $resp = $lib.inet.http.get($url, $headers)\n    if ($resp.code != 200) { return($lib.false) }\n\n    $json = $resp.body.json()\n    $ret = $lib.jsonstor.cacheset(\"ex.malpedia\", $api_endpoint, $json)\n    if $lib.debug { \n        $lib.print(\"Wrote http API response cache data for {s}: {r}\", s=$api_endpoint, r=$ret) \n    }\n\n    return($json)\n}\n\nfunction parseMalwareProfiles(data, norefs) {\n\n    $srcnode = $getMetaSource()\n\n    for $family in $data {\n        [risk:tool:software=(\"malpedia\", $family.1.uuid)\n            :reporter:name=\"Malpedia\"\n            :tag=`{$getTagPrefix()}.mal.{$family.0}`\n            :soft:name=$family.0\n        ]\n        if ($family.1.description != $lib.null) {[:desc=$family.1.description]}\n\n\n        if ($lib.len($family.1.alt_names) > 0) {\n            $alt_names = $family.1.alt_names\n            if ($family.1.common_name != $lib.null) { $alt_names.append($family.1.common_name) }\n            [:soft:names=$alt_names]\n        } elif ($family.1.common_name != $lib.null) {\n            [:soft:names=($family.1.common_name,)]\n        }\n    \n        tee\n        {\n            if (not $norefs) {\n                for $ref in $actor_data.meta.refs {\n                    [<(refs)+ {[media:news=$lib.gen.newsByUrl($ref)] [<(seen)+ { yield $srcnode }]}]\n                }\n            }\n        }\n        {\n            [<(seen)+ { yield $srcnode }]\n        }\n    }\n}\n\nfunction parseActorProfiles(data, norefs) {\n\n    $srcnode = $getMetaSource()\n\n    for $actor in $data {\n        $url = `https://malpedia.caad.fkie.fraunhofer.de/api/get/actor/{$actor}`\n        $headers = $lib.dict(\"Authorization\"=$getMalpediaAPIKey())\n        $resp = $lib.inet.http.get($url, $headers)\n\n        if ($resp.code = 200) {\n            $actor_data = $resp.body.json()\n            \n            [risk:threat=(\"malpedia\", $actor_data.uuid)\n                :org:name=$actor\n            ]\n\n            if ($actor_data.description != $lib.null) {[:desc=$actor_data.description]}\n\n            if ($actor_data.meta.\"cfr-type-of-incident\" != $lib.null) {[:type=`malpedia.{$actor_data.meta.\"cfr-type-of-incident\"}`]}\n            if ($actor_data.meta.country != $lib.null) {[:org:loc=$actor_data.meta.country]}\n\n            if ($actor_data.meta.synonyms != $lib.null and $lib.len($actor_data.meta.synonyms) > 0) {\n                [:org:names=$actor_data.meta.synonyms]   \n            }\n\n\n            tee {\n                if ($actor_data.meta.\"cfr-target-category\" != $lib.null) {\n                    for $target_industry in $actor_data.meta.\"cfr-target-category\" {\n                        [+(targets)> {[ou:industry=$lib.gen.industryByName($target_industry)]}]\n                    }\n                }\n            }\n            {\n                for $family in $actor_data.families {\n                    [<(uses)+ {[risk:tool:software=(\"malpedia\", $family.1.uuid)] [<(seen)+ { yield $srcnode }]}]\n                }\n            }\n\n            {\n                if (not $norefs) {\n                    for $ref in $actor_data.meta.refs {\n                        [<(refs)+ {[media:news=$lib.gen.newsByUrl($ref)] [<(seen)+ { yield $srcnode }]}]\n                    }\n                }\n            }\n\n            {\n                [<(seen)+ { yield $srcnode }]\n            }\n            \n            //This field seems to be broken: while it links to UUIDs, there are no matching actor profiles for said UUIDs. \n            /*\n            {\n                if ($actor_data.related != $lib.null) {\n                    for $related in $actor_data.related {\n                        [+(similar_to)> {[risk:threat=(\"malpedia\", $related.\"dest-uuid\")]}]\n                    }\n                }\n            }*/\n    \n        } else {\n            $lib.warn($resp)\n        }\n\n    }\n} \n\nfunction parseIndicators(data) {\n\n    $srcnode = $getMetaSource()\n\n    for $family in $data {\n        for $sample in $family.1 {\n            [hash:sha256=$sample.sha256]\n            $mal_tag = `{$getTagPrefix()}.mal.{$family.0}`\n            [+#$mal_tag]\n    \n            if ($sample.status != $lib.null) {\n                $status_tag = `{$getTagPrefix()}.status.{$sample.status}`\n                [+#$status_tag]\n            }\n\n            [<(seen)+ { yield $srcnode }]\n        }\n    }\n}"
+    }
+  ],
+  "name": "ex-malpedia",
+  "perms": [
+    {
+      "default": false,
+      "desc": "Allows a user to leverage the ex-malpedia package",
+      "gate": "cortex",
+      "perm": [
+        "ex",
+        "malpedia",
+        "user"
+      ]
+    }
+  ],
+  "synapse_minversion": [
+    2,
+    140,
+    0
+  ],
+  "version": "1.0.0"
+}

@@ -1,0 +1,134 @@
+name: ex-malpedia
+version: 1.0.0
+synapse_minversion: [2, 140, 0]
+desc: The ex-malpedia package provides simple ingest functionality for the Malpedia service. It can ingest all malware families and threat actor profiles as well as their references and related indicators.
+
+author:
+  url: https://github.com/EXC3L-ONE
+  name: EXC3L
+
+genopts:
+  dotstorm: true
+
+perms:
+  - perm: [ex, malpedia, user]
+    desc: Allows a user to leverage the ex-malpedia package
+    gate: cortex
+
+modules:
+  - name: ex.malpedia.api
+  - name: ex.malpedia.privsep
+    asroot:perms:
+      - [ex, malpedia, user]
+
+commands:
+  - name: ex.malpedia.setup.apikey
+    descr: Set the API key to use with Malpedia (optional, except for `ex.malpedia.ingest.indicators`)
+    perms:
+      - [ex, malpedia, user]
+    cmdargs:
+      - - apikey
+        - type: str
+          help: The API Key
+      - - --self
+        - type: bool
+          default: false
+          action: store_true
+          help: Set the key as a user variable. If not used, the key is set globally.
+      - - --debug
+        - type: bool
+          default: false
+          action: store_true
+          help: Show verbose debug output.
+          
+  - name: ex.malpedia.setup.tagprefix
+    descr: Set the tag prefix used when recording Malpedia tags. Defaults to `rep.malpedia`.
+    perms:
+      - [ex, malpedia, user]
+    cmdargs:
+      - - tagname
+        - type: str
+          default: rep.malpedia
+          help: The tag prefix to use.
+
+  - name: ex.malpedia.ingest.actors
+    descr: Ingest all threat actor profiles from the Malpedia API.  Warning - it is not recommended to run this command without also running the ex.malpedia.ingest.malware command as it may create empty risk:tool:software nodes.
+    perms:
+      - [ex, malpedia, user]
+    cmdargs:
+      - - --yield
+        - type: bool
+          default: false
+          action: store_true
+          help: Yield the newly created nodes rather than the input inet:url nodes.
+      - - --asof
+        - type: str
+          default: -30days
+          help: Specify the maximum age for a cached result. To disable caching, use --asof now.
+      - - --debug
+        - type: bool
+          default: false
+          action: store_true
+          help: Show verbose debug output.
+      - - --no-refs
+        - type: bool
+          default: false
+          action: store_true
+          help: Do not ingest the references for ingested profiles (i.e. do not create media:news nodes)
+    forms:
+      output:
+        - media:news
+        - risk:threat
+  
+  - name: ex.malpedia.ingest.malware
+    descr: Ingest all malware profiles from the Malpedia API.
+    perms:
+      - [ex, malpedia, user]
+    cmdargs:
+      - - --yield
+        - type: bool
+          default: false
+          action: store_true
+          help: Yield the newly created nodes.
+      - - --asof
+        - type: str
+          default: -24hours
+          help: Specify the maximum age for a cached result. To disable caching, use --asof now. Defaults to -24hours.
+      - - --debug
+        - type: bool
+          default: false
+          action: store_true
+          help: Show verbose debug output.
+      - - --no-refs
+        - type: bool
+          default: false
+          action: store_true
+          help: Do not ingest the references for ingested profiles (i.e. do not create media:news nodes)
+    forms:
+      output:
+        - media:news
+        - risk:tool:software
+
+  - name: ex.malpedia.ingest.indicators
+    descr: Ingests all IOCs from Malpedia. 
+    perms:
+      - [ex, malpedia, user]
+    cmdargs:
+      - - --yield
+        - type: bool
+          default: false
+          action: store_true
+          help: Yield the newly created nodes. 
+      - - --asof
+        - type: str
+          default: -24hours
+          help: Specify the maximum age for a cached result. To disable caching, use --asof now.  Defaults to -24hours.
+      - - --debug
+        - type: bool
+          default: false
+          action: store_true
+          help: Show verbose debug output.
+    forms:
+      output:
+        - media:news
+        - hash:sha256

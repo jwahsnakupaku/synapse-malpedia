@@ -1,0 +1,19 @@
+$privsep = $lib.import(ex.malpedia.privsep, debug=$lib.debug)
+
+// Fetch all malware profiles from Malpedia
+function fetchMalwareProfiles(asof) {
+    $api_url = "get/families"
+    return($privsep.makeMalpediaAPIRequest($api_endpoint, $asof))
+}
+
+// Fetch all actor profiles from Malpedia
+function fetchActorProfiles(asof) {
+    $api_endpoint = "list/actors"
+    return($privsep.makeMalpediaAPIRequest($api_endpoint, $asof))
+}
+
+// Fetch all indicators from Malpedia
+function fetchIndicators(asof) {
+    $api_endpoint = "get/indicators"
+    return($privsep.makeMalpediaAPIRequest($api_endpoint, $asof))
+}
