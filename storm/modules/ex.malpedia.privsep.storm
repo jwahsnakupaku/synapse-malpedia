@@ -31,7 +31,7 @@ function setMalpediaAPIKey(key, self) {
 function checkMalpediaAPIKey() {
     $resp = $makeMalpediaAPIRequest("check/apikey", "now")
     
-    if ($resp.code = 200) {
+    if ($resp.detail = "Valid token.") {
         return($lib.true)
     } else {
         return($lib.false)
@@ -99,7 +99,7 @@ function parseMalwareProfiles(data, norefs) {
         tee
         {
             if (not $norefs) {
-                for $ref in $actor_data.meta.refs {
+                for $ref in $family.1.meta.refs {
                     [<(refs)+ {[media:news=$lib.gen.newsByUrl($ref)] [<(seen)+ { yield $srcnode }]}]
                 }
             }
