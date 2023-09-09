@@ -19,6 +19,6 @@ There are 5 commands available:
 ## Installation
 The easiest way to use this Power-Up is to load the JSON package into the Cortex by running: 
 
-`pkg.load --raw "https://raw.githubusercontent.com/EXC3L-ONE/synapse-malpedia/main/malpedia.json"`
+`pkg.load --raw "https://raw.githubusercontent.com/EXC3L-ONE/synapse-malpedia/main/synapse_malpedia.json"`
 
 Alternatively, you can also clone this repo, and load the package via `python -m synapse.tools.genpkg` (see reference in Synapse docs [here](https://synapse.docs.vertex.link/en/latest/synapse/userguides/syn_tools_genpkg.html#building-the-example-package))
