@@ -21,9 +21,9 @@ function getMalpediaAPIKey() {
 
 function setMalpediaAPIKey(key, self) {
     if ($self) {
-        $lib.user.vars.set("malpedia:apikey", $key)
+        $lib.user.vars.set("malpedia:apikey", `apitoken {$key}`)
     } else {
-        $lib.globals.set("malpedia:apikey", $key)
+        $lib.globals.set("malpedia:apikey", `apitoken {$key}`)
     }
     return($checkMalpediaAPIKey())
 }
