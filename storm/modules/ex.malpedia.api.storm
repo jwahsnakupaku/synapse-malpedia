@@ -14,6 +14,6 @@ function fetchActorProfiles(asof) {
 
 // Fetch all indicators from Malpedia
 function fetchIndicators(asof) {
-    $api_endpoint = "get/indicators"
+    $api_endpoint = "list/samples"
     return($privsep.makeMalpediaAPIRequest($api_endpoint, $asof))
 }

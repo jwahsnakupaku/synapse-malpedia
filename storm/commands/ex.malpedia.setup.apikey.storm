@@ -12,7 +12,7 @@ init {
     if ($key_status_ok) {
         if ($lib.debug) {$lib.print("Malpedia API key set successfully")}
     } else {
-        $lib.print("Failed setting the key for the Malpedia API")
+        $lib.warn("Failed setting the key for the Malpedia API. Check if the token you provided is valid.")
     }
 
 }

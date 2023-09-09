@@ -14,5 +14,5 @@ if ($api_key_set) {
     }
 
 } else {
-    $lib.exit("Malpedia API key not set and is needed to use this function, please run 'ex.malpedia.setup.apikey' first")
+    $lib.exit("Malpedia API key not set or is not valid and is needed to use this function, please run 'ex.malpedia.setup.apikey' first")
 }

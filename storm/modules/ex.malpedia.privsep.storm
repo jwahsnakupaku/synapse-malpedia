@@ -30,7 +30,7 @@ function setMalpediaAPIKey(key, self) {
 
 function checkMalpediaAPIKey() {
     $resp = $makeMalpediaAPIRequest("check/apikey", "now")
-    
+        
     if ($resp.detail = "Valid token.") {
         return($lib.true)
     } else {
