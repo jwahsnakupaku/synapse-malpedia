@@ -4,7 +4,7 @@
     "url": "https://github.com/EXC3L-ONE"
   },
   "build": {
-    "time": 1694266041576
+    "time": 1694266192550
   },
   "commands": [
     {
@@ -229,7 +229,7 @@
   "modules": [
     {
       "name": "ex.malpedia.api",
-      "storm": "$privsep = $lib.import(ex.malpedia.privsep, debug=$lib.debug)\n\n// Fetch all malware profiles from Malpedia\nfunction fetchMalwareProfiles(asof) {\n    $api_url = \"get/families\"\n    return($privsep.makeMalpediaAPIRequest($api_endpoint, $asof))\n}\n\n// Fetch all actor profiles from Malpedia\nfunction fetchActorProfiles(asof) {\n    $api_endpoint = \"list/actors\"\n    return($privsep.makeMalpediaAPIRequest($api_endpoint, $asof))\n}\n\n// Fetch all indicators from Malpedia\nfunction fetchIndicators(asof) {\n    $api_endpoint = \"get/indicators\"\n    return($privsep.makeMalpediaAPIRequest($api_endpoint, $asof))\n}"
+      "storm": "$privsep = $lib.import(ex.malpedia.privsep, debug=$lib.debug)\n\n// Fetch all malware profiles from Malpedia\nfunction fetchMalwareProfiles(asof) {\n    $api_endpoint = \"get/families\"\n    return($privsep.makeMalpediaAPIRequest($api_endpoint, $asof))\n}\n\n// Fetch all actor profiles from Malpedia\nfunction fetchActorProfiles(asof) {\n    $api_endpoint = \"list/actors\"\n    return($privsep.makeMalpediaAPIRequest($api_endpoint, $asof))\n}\n\n// Fetch all indicators from Malpedia\nfunction fetchIndicators(asof) {\n    $api_endpoint = \"get/indicators\"\n    return($privsep.makeMalpediaAPIRequest($api_endpoint, $asof))\n}"
     },
     {
       "asroot:perms": [
