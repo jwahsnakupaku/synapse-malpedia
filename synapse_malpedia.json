@@ -4,7 +4,7 @@
     "url": "https://github.com/EXC3L-ONE"
   },
   "build": {
-    "time": 1694268649788
+    "time": 1694268712907
   },
   "commands": [
     {
@@ -222,7 +222,7 @@
           "user"
         ]
       ],
-      "storm": "init {\n    $api = $lib.import(ex.malpedia.api, debug=$lib.debug)\n    $privsep = $lib.import(ex.malpedia.privsep, debug=$lib.debug)\n}\n\n$api_key_set = $privsep.checkMalpediaAPIKey()\n\nif ($api_key_set) {\n    $data = $lib.false\n    $data = $api.fetchIndicators($cmdopts.asof)\n\n    if ($data) {\n        divert $cmdopts.yield $privsep.parseIndicators($data, $cmdopts.\"no-refs\")\n    }\n\n} else {\n    $lib.exit(\"Malpedia API key not set or is not valid and is needed to use this function, please run 'ex.malpedia.setup.apikey' first\")\n}"
+      "storm": "init {\n    $api = $lib.import(ex.malpedia.api, debug=$lib.debug)\n    $privsep = $lib.import(ex.malpedia.privsep, debug=$lib.debug)\n}\n\n$api_key_set = $privsep.checkMalpediaAPIKey()\n\nif ($api_key_set) {\n    $data = $lib.false\n    $data = $api.fetchIndicators($cmdopts.asof)\n\n    if ($data) {\n        divert $cmdopts.yield $privsep.parseIndicators($data)\n    }\n\n} else {\n    $lib.exit(\"Malpedia API key not set or is not valid and is needed to use this function, please run 'ex.malpedia.setup.apikey' first\")\n}"
     }
   ],
   "desc": "The ex-malpedia package provides simple ingest functionality for the Malpedia service. It can ingest all malware families and threat actor profiles as well as their references and related indicators.",

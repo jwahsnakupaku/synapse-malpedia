@@ -10,7 +10,7 @@ if ($api_key_set) {
     $data = $api.fetchIndicators($cmdopts.asof)
 
     if ($data) {
-        divert $cmdopts.yield $privsep.parseIndicators($data, $cmdopts."no-refs")
+        divert $cmdopts.yield $privsep.parseIndicators($data)
     }
 
 } else {
