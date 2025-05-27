@@ -107,12 +107,6 @@
         ]
       ],
       "descr": "Ingest all threat actor profiles from the Malpedia API.  Warning - it is not recommended to run this command without also running the ex.malpedia.ingest.malware command as it may create empty risk:tool:software nodes.",
-      "forms": {
-        "output": [
-          "media:news",
-          "risk:threat"
-        ]
-      },
       "name": "ex.malpedia.ingest.actors",
       "perms": [
         [
@@ -162,12 +156,6 @@
         ]
       ],
       "descr": "Ingest all malware profiles from the Malpedia API.",
-      "forms": {
-        "output": [
-          "media:news",
-          "risk:tool:software"
-        ]
-      },
       "name": "ex.malpedia.ingest.malware",
       "perms": [
         [
@@ -208,12 +196,6 @@
         ]
       ],
       "descr": "Ingests all IOCs from Malpedia.",
-      "forms": {
-        "output": [
-          "media:news",
-          "hash:sha256"
-        ]
-      },
       "name": "ex.malpedia.ingest.indicators",
       "perms": [
         [

@@ -1,5 +1,5 @@
 name: ex-malpedia
-version: 1.0.0
+version: 1.0.1
 synapse_minversion: [2, 140, 0]
 desc: The ex-malpedia package provides simple ingest functionality for the Malpedia service. It can ingest all malware families and threat actor profiles as well as their references and related indicators.
 
@@ -75,10 +75,6 @@ commands:
           default: false
           action: store_true
           help: Do not ingest the references for ingested profiles (i.e. do not create media:news nodes)
-    forms:
-      output:
-        - media:news
-        - risk:threat
   
   - name: ex.malpedia.ingest.malware
     descr: Ingest all malware profiles from the Malpedia API.
@@ -104,10 +100,6 @@ commands:
           default: false
           action: store_true
           help: Do not ingest the references for ingested profiles (i.e. do not create media:news nodes)
-    forms:
-      output:
-        - media:news
-        - risk:tool:software
 
   - name: ex.malpedia.ingest.indicators
     descr: Ingests all IOCs from Malpedia. 
@@ -128,7 +120,3 @@ commands:
           default: false
           action: store_true
           help: Show verbose debug output.
-    forms:
-      output:
-        - media:news
-        - hash:sha256
